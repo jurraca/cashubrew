@@ -2,8 +2,16 @@ defmodule Cashubrew.Store.ProofsUsed do
   use GenServer
 
   alias :mnesia, as: Mnesia
+  alias Cashubrew.Cashu.Proof
 
 
+  def add(%Proof{} = p) do
+    GenServer.cast(__MODULE__, {:add, p})
+  end
+
+  def available?(secret) do
+    GenServer.call(__MODULE__, {:available?, secret})
+  end
 
   def start_link(state \\ []) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
@@ -20,7 +28,7 @@ defmodule Cashubrew.Store.ProofsUsed do
   end
 
   defp create_table do
-    with {:atomic, :ok} <- Mnesia.create_table(ProofsUsed, [attributes: [:amount, :id, :secret, :C, :created]]) do
+    with {:atomic, :ok} <- Mnesia.create_table(ProofsUsed, [attributes: [:amount, :id, :secret, :c, :created]]) do
       :ok
     else
       {:aborted, {:already_exists, ProofsUsed}} -> :ok
@@ -29,7 +37,7 @@ defmodule Cashubrew.Store.ProofsUsed do
   end
 
   defp create_index do
-    with :ok <- Mnesia.add_table_index(ProofsUsed, :secret) do
+    with {:atomic, :ok} <- Mnesia.add_table_index(ProofsUsed, :secret) do
       :ok
     else
       {:aborted, {:already_exists, _, _}} -> :ok
@@ -45,6 +53,23 @@ defmodule Cashubrew.Store.ProofsUsed do
         {:noreply, state}
     else
       {:error, reason} -> {:stop, reason, state}
+    end
+  end
+
+  def handle_cast({:add, %Proof{} = p}, state) do
+    with :ok <- Mnesia.dirty_write({ProofsUsed, p.amount, p.id, p.secret, p."C", DateTime.utc_now()}) do
+      {:noreply, state}
+    end
+  end
+
+  def handle_call({:available?, secret}, _from, state) do
+    with {:atomic, [{ProofsUsed, _, _, ^secret, _, _}]} <- Mnesia.transaction(fn ->
+      Mnesia.index_read(ProofsUsed, secret, :secret)
+    end) do
+      {:reply, :yes, state}
+    else
+      {:atomic, []} -> {:reply, :no, state}
+      e -> {:reply, {:error, e}, state}
     end
   end
 

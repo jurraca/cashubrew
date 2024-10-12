@@ -316,7 +316,7 @@ defmodule Cashubrew.Mint do
         %BlindSignature{
           amount: bm.amount,
           id: bm.id,
-          C_: Base.encode16(c_prime, case: :lower)
+          c_: Base.encode16(c_prime, case: :lower)
         }
       end)
 
