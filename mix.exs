@@ -15,7 +15,8 @@ defmodule Cashubrew.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test,
-        bench: :dev
+        bench: :dev,
+        generate_inputs: :dev
       ]
     ]
   end

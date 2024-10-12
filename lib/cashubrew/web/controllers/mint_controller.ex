@@ -90,7 +90,7 @@ defmodule Cashubrew.Web.MintController do
 
   def swap(conn, %{"inputs" => inputs, "outputs" => outputs}) do
     inputs = parse_proofs(inputs)
-    outputs = validate_blinded_messages(outputs)
+    outputs = parse_blinded_messages(outputs)
     post_swap_request = PostSwapRequest.new(inputs, outputs)
 
     case Mint.swap(post_swap_request) do
@@ -119,6 +119,18 @@ defmodule Cashubrew.Web.MintController do
     }
   end
 
+  defp parse_blinded_messages(blinded_messages) do
+    Enum.map(blinded_messages, &parse_to_blinded_message/1)
+  end
+
+  defp parse_to_blinded_message(blinded_message) do
+    %BlindedMessage{
+      amount: Map.fetch!(blinded_message, "amount"),
+      id: Map.fetch!(blinded_message, "id"),
+      B_: Map.fetch!(blinded_message, "B_") |> Base.decode16!(case: :lower)
+    }
+  end
+
   defp parse_proofs(json_proofs) do
     Enum.map(json_proofs, &parse_proof/1)
   end
@@ -128,7 +140,7 @@ defmodule Cashubrew.Web.MintController do
       amount: Map.fetch!(json_proof, "amount"),
       id: Map.fetch!(json_proof, "id"),
       secret: Map.fetch!(json_proof, "secret"),
-      C: Map.fetch!(json_proof, "C")
+      C: Map.fetch!(json_proof, "C") |> Base.decode16!(case: :lower)
     }
   end
 
