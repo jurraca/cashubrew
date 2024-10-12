@@ -292,7 +292,7 @@ defmodule Cashubrew.Mint do
       |> Enum.all?()
 
     if all_proofs_valid? do
-      {:ok, blind_signatures} = sign_outputs(repo, outputs)
+      {:ok, blind_signatures} = sign_outputs_no_decode(repo, outputs)
       {:reply, {:ok, blind_signatures}, state}
     else
       {:reply, {:error, :invalid_proofs}, state}
@@ -301,6 +301,26 @@ defmodule Cashubrew.Mint do
 
   defp verify_proof(proof, key) do
     BDHKE.verify(key.private_key, proof."C", proof.secret)
+  end
+
+  defp sign_outputs_no_decode(repo, blinded_messages) do
+    signatures =
+      Enum.map(blinded_messages, fn bm ->
+        # Get key from database
+        amount_key = get_key_for_amount(repo, bm.id, bm.amount)
+        privkey = amount_key.private_key
+        # Bob (mint) signs the blinded message
+        b_prime = bm."B_"
+        {c_prime, _e, _s} = BDHKE.step2_bob(b_prime, privkey)
+
+        %BlindSignature{
+          amount: bm.amount,
+          id: bm.id,
+          C_: Base.encode16(c_prime, case: :lower)
+        }
+      end)
+
+    {:ok, signatures}
   end
 
   defp sign_outputs(repo, blinded_messages) do

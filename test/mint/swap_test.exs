@@ -12,7 +12,7 @@ defmodule Cashubrew.Mint.SwapTest do
     all_amounts = Mint.get_keys_for_keyset(Cashubrew.Repo, keyset.id)
     amount_1 = Enum.filter(all_amounts, fn k -> k.amount == 1 end) |> List.first()
 
-    x = :crypto.strong_rand_bytes(32)
+    x = :crypto.strong_rand_bytes(32) |> Base.encode16(case: :lower)
     r = :crypto.strong_rand_bytes(32)
 
     {b_, _} = BDHKE.step1_alice(x, r)
@@ -40,14 +40,14 @@ defmodule Cashubrew.Mint.SwapTest do
       Cashubrew.Cashu.BlindedMessage.new_blinded_message(
         1,
         amount_1.keyset_id,
-        Base.encode16(new_b_, case: :lower)
+        new_b_
       )
 
     {expected_c_, _e, _s} = BDHKE.step2_bob(new_b_, amount_1.private_key)
 
-    post_swap_request = PostSwapRequest.new([proof], [blinded_message])
+    post_swap_request = PostSwapRequest.new([proof |> dbg()], [blinded_message |> dbg()])
 
-    {:ok, [actual_blind_signature]} = Mint.swap(mint_genserver, post_swap_request)
+    {:ok, [actual_blind_signature]} = Mint.swap(post_swap_request)
 
     assert actual_blind_signature."C_" == Base.encode16(expected_c_, case: :lower)
     assert actual_blind_signature.amount == 1
