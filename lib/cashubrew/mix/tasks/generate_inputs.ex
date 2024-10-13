@@ -24,8 +24,10 @@ defmodule Mix.Tasks.GenerateInputs do
     {r, _r_pub} = BDHKE.generate_keypair(<<1::256>>)
     {r_new, _r_pub} = BDHKE.generate_keypair(<<1::256>>)
 
-    {x, c} = get_proof(a.private_key, a.public_key, "secret", r)
-    b_prime = get_blinded_message("secret", r_new)
+    secret = :crypto.strong_rand_bytes(32) |> Base.encode16(case: :lower)
+
+    {x, c} = get_proof(a.private_key, a.public_key, secret, r)
+    b_prime = get_blinded_message(secret, r_new)
 
     input = Cashubrew.Cashu.Proof.new(1, keyset.id, x, Base.encode16(c, case: :lower))
 
