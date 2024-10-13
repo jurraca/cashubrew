@@ -13,6 +13,10 @@ defmodule Cashubrew.Store.ProofsUsed do
     GenServer.call(__MODULE__, {:available?, secret})
   end
 
+  def clear() do
+    GenServer.call(__MODULE__, :clear_table)
+  end
+
   def start_link(state \\ []) do
     GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
@@ -34,6 +38,10 @@ defmodule Cashubrew.Store.ProofsUsed do
       {:aborted, {:already_exists, ProofsUsed}} -> :ok
       {:aborted, reason} -> {:error, reason}
     end
+  end
+
+  defp clear_table do
+    Mnesia.clear_table(ProofsUsed)
   end
 
   defp create_index do
@@ -71,6 +79,15 @@ defmodule Cashubrew.Store.ProofsUsed do
       {:atomic, []} -> {:reply, :no, state}
       e -> {:reply, {:error, e}, state}
     end
+  end
+
+  def handle_call(:clear_table, _from, state) do
+    with {:atomic, :ok} <- clear_table() do
+      {:reply, :ok, state}
+    else
+      e -> {:reply, e, state}
+    end
+
   end
 
 end
