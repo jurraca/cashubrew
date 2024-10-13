@@ -10,11 +10,8 @@
     # Build for each default system of flake-utils: ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"].
     flake-utils.lib.eachDefaultSystem (system:
       let
-        # Declare pkgs for the specific target system we're building for, with the rust overlay.
         pkgs = import nixpkgs { inherit system; };
-        # Declare BEAM version we want to use. If not, defaults to the latest on this channel.
         beamPackages = pkgs.beam.packagesWith pkgs.beam.interpreters.erlang_27;
-        # Optional build inputs depending on system.
         opts =
          with pkgs; lib.optional stdenv.isLinux inotify-tools ++
           lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
@@ -33,6 +30,7 @@
             elixir
             hex
             mix2nix
+	    pkgs.postgresql
           ] ++ opts;
 
         shellHook = ''
@@ -47,6 +45,14 @@
           # BEAM-specific
           export LANG=en_US.UTF-8
           export ERL_AFLAGS="-kernel shell_history enabled"
+    # postgres related
+    # keep all your db data in a folder inside the project
+    export PGDATA="$PWD/db"
+
+    # phoenix related env vars
+    export POOL_SIZE=15
+    export DB_URL="postgresql://postgres:postgres@localhost:5432/cashubrew_dev"
+    export PORT=4000
         '';
       in
       # output attributes

@@ -8,12 +8,11 @@ defmodule RunClients do
     |> Jason.decode!
   end
 
-  def swap(tokens) do
-     Enum.map(tokens, fn tk -> Req.post("http://localhost:4000/api/v1/swap", body: tk) end)
-  end
-
-  def run(tokens) do
-     Task.async_stream(fn -> swap(tokens) end, ordered: false)
+  def run(token_path) do
+     tokens = read_tokens(token_path)
+     Task.async_stream(tokens, fn tk -> Req.post("http://localhost:4000/api/v1/swap", body: Jason.encode!(tk)) end, ordered: false)
      |> Stream.run()
   end
 end
+
+RunClients.run("tokens.json")
