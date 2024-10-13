@@ -23,7 +23,7 @@ defmodule Cashubrew.MixProject do
 
   def application do
     [
-      extra_applications: [:logger, :crypto, :mnesia],
+      extra_applications: [:logger, :crypto, :mnesia, :os_mon],
       mod: {Cashubrew.Application, []}
     ]
   end

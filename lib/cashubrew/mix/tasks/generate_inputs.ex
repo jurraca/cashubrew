@@ -8,9 +8,17 @@ defmodule Mix.Tasks.GenerateInputs do
   def run(_args) do
     Mix.Task.run("app.start")
 
-    [keyset] = Mint.get_keysets()
-
     repo = Application.get_env(:cashubrew, :repo)
+
+    Enum.map(1..10, fn _ ->
+      generate_input(repo)
+    end)
+    |> Jason.encode!()
+    |> IO.puts()
+  end
+
+  defp generate_input(repo) do
+    [keyset] = Mint.get_keysets()
     a = Mint.get_key_for_amount(repo, keyset.id, 1)
 
     {r, _r_pub} = BDHKE.generate_keypair(<<1::256>>)
@@ -28,7 +36,7 @@ defmodule Mix.Tasks.GenerateInputs do
         Base.encode16(b_prime, case: :lower)
       )
 
-    Jason.encode!(%{inputs: [input], outputs: [output]}) |> IO.puts()
+    %{inputs: [input], outputs: [output]}
   end
 
   def get_proof(a, a_pub, x, r) do
