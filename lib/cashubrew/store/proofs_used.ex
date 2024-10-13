@@ -27,14 +27,12 @@ defmodule Cashubrew.Store.ProofsUsed do
   end
 
   defp create_table do
-    dbg("create_table")
-
     with {:atomic, :ok} <-
            Mnesia.create_table(ProofsUsed, attributes: [:amount, :id, :secret, :c, :created]) do
-      :ok |> dbg()
+      :ok
     else
-      {:aborted, {:already_exists, ProofsUsed}} -> :ok |> dbg()
-      {:aborted, reason} -> {:error, reason} |> dbg()
+      {:aborted, {:already_exists, ProofsUsed}} -> :ok
+      {:aborted, reason} -> {:error, reason}
     end
   end
 
@@ -54,7 +52,7 @@ defmodule Cashubrew.Store.ProofsUsed do
          :ok <- create_index() do
       {:noreply, state}
     else
-      {:error, reason} -> {:stop, reason, state} |> dbg()
+      {:error, reason} -> {:stop, reason, state}
     end
   end
 

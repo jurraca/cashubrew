@@ -45,7 +45,7 @@ defmodule Cashubrew.Mint.SwapTest do
 
     {expected_c_, _e, _s} = BDHKE.step2_bob(new_b_, amount_1.private_key)
 
-    post_swap_request = PostSwapRequest.new([proof |> dbg()], [blinded_message |> dbg()])
+    post_swap_request = PostSwapRequest.new([proof], [blinded_message])
 
     {:ok, [actual_blind_signature]} = Mint.swap(post_swap_request)
 

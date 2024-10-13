@@ -295,10 +295,13 @@ defmodule Cashubrew.Mint do
   end
 
   defp proofs_unspent?(proofs) do
-    proofs
-    |> Enum.any?(fn proof ->
-      Cashubrew.Store.ProofsUsed.present?(proof.secret) |> dbg()
-    end)
+    any_spent? =
+      proofs
+      |> Enum.any?(fn proof ->
+        Cashubrew.Store.ProofsUsed.present?(proof.secret)
+      end)
+
+    not any_spent?
   end
 
   defp proofs_valid?(proofs, repo) do
@@ -336,7 +339,7 @@ defmodule Cashubrew.Mint do
 
   defp mark_proofs_spent(proofs) do
     Enum.each(proofs, fn proof ->
-      Cashubrew.Store.ProofsUsed.add(proof.secret)
+      Cashubrew.Store.ProofsUsed.add(proof)
     end)
   end
 
