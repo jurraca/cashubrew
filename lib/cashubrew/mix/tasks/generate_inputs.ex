@@ -5,18 +5,18 @@ defmodule Mix.Tasks.GenerateInputs do
   alias Cashubrew.Mint
 
   @impl Mix.Task
-  def run(args) do
+  def run(_args) do
     Mix.Task.run("app.start")
 
     repo = Application.get_env(:cashubrew, :repo)
 
-    count = List.first(args) |> String.to_integer()
+    # Enum.map(1..10, fn _ ->
+    #   generate_input(repo)
+    # end)
+    # |> Jason.encode!()
+    # |> IO.puts()
 
-    Enum.map(1..count, fn _ ->
-      generate_input(repo)
-    end)
-    |> Jason.encode!()
-    |> IO.puts()
+    generate_input(repo) |> Jason.encode!() |> IO.puts()
   end
 
   defp generate_input(repo) do
