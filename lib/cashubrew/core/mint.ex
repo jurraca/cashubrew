@@ -281,22 +281,33 @@ defmodule Cashubrew.Mint do
   end
 
   def handle_call({:swap, %PostSwapRequest{inputs: proofs, outputs: outputs}}, _from, state) do
-    repo = Application.get_env(:cashubrew, :repo)
-
-    all_proofs_valid? =
-      proofs
-      |> Enum.map(fn proof ->
-        key = get_key_for_amount(repo, proof.id, proof.amount)
-        verify_proof(proof, key)
-      end)
-      |> Enum.all?()
-
-    if all_proofs_valid? do
+    with {:unspent, true} <- {:unspent, proofs_unspent?(proofs)},
+         repo <- Application.get_env(:cashubrew, :repo),
+         {:valid, true} <- {:valid, proofs_valid?(proofs, repo)} do
       {:ok, blind_signatures} = sign_outputs_no_decode(repo, outputs)
+      :ok = mark_proofs_spent(proofs)
       {:reply, {:ok, blind_signatures}, state}
     else
-      {:reply, {:error, :invalid_proofs}, state}
+      {:unspent, false} -> {:reply, {:error, :proofs_spent}, state}
+      {:valid, false} -> {:reply, {:error, :invalid_proofs}, state}
+      e -> {:reply, {:error, e}, state}
     end
+  end
+
+  defp proofs_unspent?(proofs) do
+    proofs
+    |> Enum.any?(fn proof ->
+      Cashubrew.Store.ProofsUsed.present?(proof.secret) |> dbg()
+    end)
+  end
+
+  defp proofs_valid?(proofs, repo) do
+    proofs
+    |> Enum.map(fn proof ->
+      key = get_key_for_amount(repo, proof.id, proof.amount)
+      verify_proof(proof, key)
+    end)
+    |> Enum.all?()
   end
 
   defp verify_proof(proof, key) do
@@ -321,6 +332,12 @@ defmodule Cashubrew.Mint do
       end)
 
     {:ok, signatures}
+  end
+
+  defp mark_proofs_spent(proofs) do
+    Enum.each(proofs, fn proof ->
+      Cashubrew.Store.ProofsUsed.add(proof.secret)
+    end)
   end
 
   defp sign_outputs(repo, blinded_messages) do

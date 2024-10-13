@@ -4,7 +4,6 @@ defmodule Cashubrew.Application do
   alias Cashubrew.Lightning.LightningNetworkService
   alias Cashubrew.Lightning.MockLightningNetworkService
   alias Cashubrew.Web.Endpoint
-  alias Cashubrew.Store.ProofsUsed
 
   @impl true
   def start(_type, _args) do
@@ -14,7 +13,7 @@ defmodule Cashubrew.Application do
       Endpoint,
       MockLightningNetworkService,
       LightningNetworkService,
-      ProofsUsed,
+      Cashubrew.Store.ProofsUsed
     ]
 
     # Conditionally add the appropriate repo to the children list
