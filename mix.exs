@@ -52,6 +52,7 @@ defmodule Cashubrew.MixProject do
       {:phoenix_live_view, "~> 0.20.0"},
       {:plug_cowboy, "~> 2.5"},
       {:postgrex, ">= 0.0.0"},
+      {:req, ">= 0.5.6"},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},

@@ -10,7 +10,10 @@ defmodule RunClients do
 
   def run(token_path) do
      tokens = read_tokens(token_path)
-     Task.async_stream(tokens, fn tk -> Req.post("http://localhost:4000/api/v1/swap", body: Jason.encode!(tk)) end, ordered: false)
+     Task.async_stream(tokens, fn tk ->
+       resp = Req.post!("http://localhost:4000/api/v1/swap", json: tk)
+       dbg(resp.body)
+       end, ordered: false)
      |> Stream.run()
   end
 end
